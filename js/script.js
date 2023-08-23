@@ -223,6 +223,59 @@ function displayBackgroudImage(type, backgroundPath) {
   }
 }
 
+// Add now playing
+async function displayNowPlaying() {
+  const { results } = await fetchAPIData(`movie/now_playing`);
+  console.log(results);
+
+  const swiperWrapper = document.querySelector('.swiper-wrapper');
+
+  results.forEach((result) => {
+    const div = document.createElement('div');
+    div.classList.add('swiper-slide');
+    div.innerHTML = `
+    <a href="movie-details.html?id=${result.id}">
+      <img src="https://image.tmdb.org/t/p/w500${
+        result.poster_path
+      }" alt="Movie Title" />
+    </a>
+    <h4 class="swiper-rating">
+      <i class="fas fa-star text-secondary"></i> ${result.vote_average.toFixed(
+        1
+      )} / 10
+    </h4>
+  `;
+
+    swiperWrapper.appendChild(div);
+    initSwiper();
+  });
+}
+
+// Swiper
+function initSwiper() {
+  const swiper = new Swiper('.swiper', {
+    slidesPerView: 1,
+    spaceBetween: 30,
+    freeMode: true,
+    loop: true,
+    autoplay: {
+      delay: 3000,
+      disableonInteraction: false,
+    },
+    breakpoints: {
+      500: {
+        slidesPerView: 2,
+      },
+      700: {
+        slidesPerView: 3,
+      },
+      1200: {
+        slidesPerView: 4,
+      },
+    },
+  });
+}
+
 // Fetch data from TMDB API
 async function fetchAPIData(endpoint) {
   showSpinner();
@@ -231,15 +284,14 @@ async function fetchAPIData(endpoint) {
 
   const response = await fetch(
     //api_key=${API_KEY}&
-    `${API_URL}${endpoint}?api_key=${API_KEY}&language=en-US`
-    // ,
-    // {
-    //   method: 'GET',
-    //   headers: {
-    //     Authorization:
-    //       'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0MGNmNjAyMGIzYTEwZGI2YzU4YjkzMmEzZjU5YzNjMyIsInN1YiI6IjY0ZGI1MzEzYjc3ZDRiMTEzZTA0Zjk3NyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.gTUMfMIjX2280MOuH42mcYE6Z7vKM6WgwqabRoIURG8',
-    //   },
-    // }
+    `${API_URL}${endpoint}?language=en-US`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization:
+          'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0MGNmNjAyMGIzYTEwZGI2YzU4YjkzMmEzZjU5YzNjMyIsInN1YiI6IjY0ZGI1MzEzYjc3ZDRiMTEzZTA0Zjk3NyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.gTUMfMIjX2280MOuH42mcYE6Z7vKM6WgwqabRoIURG8',
+      },
+    }
   );
 
   const data = await response.json();
@@ -280,6 +332,7 @@ function init() {
   switch (global.currentPage) {
     case '/':
     case '/index.html':
+      displayNowPlaying();
       displayPopularMovies();
       console.log('Home');
       break;
