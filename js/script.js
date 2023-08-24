@@ -1,5 +1,18 @@
 const global = {
   currentPage: window.location.pathname,
+  search: {
+    term: '',
+    type: '',
+    page: 1,
+    totalPages: 1,
+  },
+
+  api: {
+    apiKey: '40cf6020b3a10db6c58b932a3f59c3c3',
+    apiUrl: 'https://api.themoviedb.org/3/',
+    apiToken:
+      'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0MGNmNjAyMGIzYTEwZGI2YzU4YjkzMmEzZjU5YzNjMyIsInN1YiI6IjY0ZGI1MzEzYjc3ZDRiMTEzZTA0Zjk3NyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.gTUMfMIjX2280MOuH42mcYE6Z7vKM6WgwqabRoIURG8',
+  },
 };
 
 // Display popular movies
@@ -279,8 +292,12 @@ function initSwiper() {
 // Fetch data from TMDB API
 async function fetchAPIData(endpoint) {
   showSpinner();
-  const API_URL = 'https://api.themoviedb.org/3/';
-  const API_KEY = '40cf6020b3a10db6c58b932a3f59c3c3';
+  // const API_URL = 'https://api.themoviedb.org/3/';
+  // const API_KEY = '40cf6020b3a10db6c58b932a3f59c3c3';
+
+  const API_URL = global.api.apiUrl;
+  const API_KEY = global.api.apiKey;
+  const API_TOKEN = global.api.apiToken;
 
   const response = await fetch(
     //api_key=${API_KEY}&
@@ -288,8 +305,7 @@ async function fetchAPIData(endpoint) {
     {
       method: 'GET',
       headers: {
-        Authorization:
-          'Bearer eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiI0MGNmNjAyMGIzYTEwZGI2YzU4YjkzMmEzZjU5YzNjMyIsInN1YiI6IjY0ZGI1MzEzYjc3ZDRiMTEzZTA0Zjk3NyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.gTUMfMIjX2280MOuH42mcYE6Z7vKM6WgwqabRoIURG8',
+        Authorization: API_TOKEN,
       },
     }
   );
@@ -297,6 +313,46 @@ async function fetchAPIData(endpoint) {
   const data = await response.json();
   hideSpinner();
   return data;
+}
+
+// Make request to Search
+async function searchAPIData(endpoint) {
+  showSpinner();
+  const API_URL = global.api.apiUrl;
+  const API_KEY = global.api.apiKey;
+  const API_TOKEN = global.api.apiToken;
+
+  const response = await fetch(
+    //api_key=${API_KEY}&
+    `${API_URL}search/${global.search.type}?language=en-US&query=${global.search.term}`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: API_TOKEN,
+      },
+    }
+  );
+
+  const data = await response.json();
+  hideSpinner();
+  return data;
+}
+
+// Search movies/shows
+async function search() {
+  const queryString = window.location.search;
+  const urlParams = new URLSearchParams(queryString);
+
+  global.search.type = urlParams.get('type');
+  global.search.term = urlParams.get('search-term');
+
+  if (global.search.term !== '' && global.search.term !== null) {
+    const results = await searchAPIData();
+    console.log(results);
+  } else {
+    showAlert('please enter a search term');
+  }
+  console.log(global.search.type);
 }
 
 // Highlight Active link
@@ -319,6 +375,18 @@ function showSpinner() {
 function hideSpinner() {
   const spinner = document.querySelector('.spinner');
   spinner.classList.remove('show');
+}
+
+// Show empty search alert
+function showAlert(message, className) {
+  const alertEl = document.createElement('div');
+  alertEl.classList.add('alert', className);
+  alertEl.appendChild(document.createTextNode(message));
+  document.querySelector('#alert').appendChild(alertEl);
+
+  setTimeout(() => {
+    alertEl.remove();
+  }, 3000);
 }
 
 // Add commas
@@ -345,6 +413,7 @@ function init() {
       console.log('Movie details');
       break;
     case '/search.html':
+      search();
       console.log('Search');
       break;
     case '/tv-details.html':
